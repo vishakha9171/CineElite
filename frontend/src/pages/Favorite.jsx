@@ -5,6 +5,12 @@ import BackdropCircle from '../components/BackdropCircle'
 import { Heart } from 'lucide-react' 
 
 const Favorites = () => {
+  // Local storage can only save text strings.
+  // JSON.parse(...): Converts that string back into a real JavaScript array of IDs
+
+  //passing an anonymous callback function () => { ... } inside useState.The Magic: React will only 
+  // execute this block of code once, at the exact moment the component mounts for the first time.
+
   const [favoriteMovies, setFavoriteMovies] = useState(() => {
     const savedFavorites = JSON.parse(localStorage.getItem('likedMovies')) || []
     if (savedFavorites.length > 0) {
@@ -24,8 +30,14 @@ const Favorites = () => {
       }
     }
 
+
+    // 1. window.addEventListener('storage_update', syncFavorites):This line tells the browser: "Keep your ears open.
+    //  Whenever a storage_update event happens anywhere on this website, immediately run the syncFavorites function."
+    // The Problem it Solves: When a user clicks a heart button inside a MovieCard, that card updates localStorage,
+    //  but the Favorites component has no natural way of knowing that something changed.
     window.addEventListener('storage_update', syncFavorites)
     return () => {
+      // tells the browser: "If the user navigates away from the Favorites page, detach the ears
       window.removeEventListener('storage_update', syncFavorites)
     }
   }, [])
@@ -68,7 +80,7 @@ const Favorites = () => {
     <div className='w-full min-h-[80vh] flex flex-col items-center justify-center text-center px-6 bg-[#0a0f1d]
      text-gray-400'>
       <Heart className='w-12 h-12 text-zinc-700 mb-4 stroke-[1.5]' />
-      <h3 className='text-xl font-bold text-white mb-1'>Your watchlist is empty</h3>
+      <h3 className='text-xl font-bold text-white mb-1'>Your Collection is empty</h3>
       <p className='text-sm text-zinc-500 max-w-sm leading-relaxed'>
         Tap the heart button on movies to save in your favorites.
       </p>

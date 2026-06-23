@@ -14,7 +14,7 @@ const MovieCard = ({ movie }) => {
 
   const toggleLike = (e) => {
     e.preventDefault();   
-    e.stopPropagation(); 
+    e.stopPropagation();  //prevent from redirted to movie route on clicking
     
     const savedFavorites = JSON.parse(localStorage.getItem('likedMovies')) || [];
     const movieId = movie._id || movie.id;
@@ -46,7 +46,8 @@ const MovieCard = ({ movie }) => {
         
         <div 
           onClick={() => { navigate(`/movies/${movie._id}`); window.scrollTo(0, 0); }}
-          className='absolute inset-0 bg-zinc-950/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center cursor-pointer'
+          className='absolute inset-0 bg-zinc-950/40 opacity-0 group-hover:opacity-100
+           transition-opacity duration-300 flex items-center justify-center cursor-pointer'
         >
           <div className='w-12 h-12 rounded-full bg-white/20 backdrop-blur-md border border-white/30 flex items-center justify-center 
            scale-75 group-hover:scale-100 transition-transform duration-500 shadow-lg'>
