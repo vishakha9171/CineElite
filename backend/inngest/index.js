@@ -1,5 +1,5 @@
 import { Inngest } from "inngest";
-import {User} from '../models/user.js'
+import User from '../models/user.js'
 
 // Create a client to send and receive events
 export const inngest = new Inngest({ id: "movie-ticket-booking" });
@@ -12,10 +12,10 @@ const syncUserCreation = inngest.createFunction(
   async ({ event }) => {
     const {id,first_name,last_name,email_addresses,image_url} = event.data;
     const userData={
-        _id=id,
-        name=first_name + ' ' +last_name,
-        email=email_addresses[0].email_address,
-        image=image_url
+        _id:id,
+        name:first_name + ' ' +last_name,
+        email:email_addresses[0].email_address,
+        image:image_url
     }
     await User.create(userData);
   },
@@ -39,10 +39,10 @@ const syncUserUpdation = inngest.createFunction(
   async ({ event }) => {
     const {id,first_name,last_name,email_addresses,image_url} = event.data;
     const userData={
-        _id=id,
-        name=first_name + ' ' +last_name,
-        email=email_addresses[0].email_address,
-        image=image_url
+        _id:id,
+        name:first_name + ' ' +last_name,
+        email:email_addresses[0].email_address,
+        image:image_url
     }
     await User.findByIdAndUpdate(id,userData);
   },
