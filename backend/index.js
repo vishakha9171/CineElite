@@ -12,7 +12,17 @@ dotenv.config()
 const app=express()
 const port=process.env.PORT;
 
-await connectDB()
+// ⚡ VERCEL SAFE DATABASE MIDDLEWARE:
+// This ensures MongoDB connects on the fly when incoming API traffic hits,
+// preventing Vercel from timing out during initialization.
+app.use(async (req, res, next) => {
+  try {
+    await connectDB();
+    next();
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Database connection failed" });
+  }
+});
 
 // middleware
 app.use(express.json())
