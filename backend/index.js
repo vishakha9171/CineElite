@@ -5,6 +5,7 @@ import connectDB from "./configs/db.js" //remember to add .js
 import { clerkMiddleware } from '@clerk/express'
 import { serve } from "inngest/express";
 import { inngest, functions } from "./inngest/index.js"
+import showRouter from "./routes/showRoute.js"
 
 // Loads .env file contents into process.env.
 dotenv.config()
@@ -19,19 +20,9 @@ app.use(cors())
 
 app.use(clerkMiddleware())
 
-// ⚡ VERCEL SAFE DATABASE MIDDLEWARE:
-// This ensures MongoDB connects on the fly when incoming API traffic hits,
-// preventing Vercel from timing out during initialization.
-app.use(async (req, res, next) => {
-  try {
-    await connectDB();
-    next();
-  } catch (error) {
-    res.status(500).json({ success: false, message: "Database connection failed" });
-  }
-});
+await connectDB();
 
- 
+
 // API routes
 app.get("/",(req,res)=>{
     res.send("server is running")
@@ -40,17 +31,20 @@ app.get("/",(req,res)=>{
 app.get('/api/status', (req, res) => {
   res.status(200).json({ 
     success: true, 
-    message: "CineLite / QuickShow Backend Services Operational." 
+    message: "CineLite Backend Services Operational." 
   });
 });
 
 // Set up the "/api/inngest" (recommended) routes with the serve handler
 app.use("/api/inngest", serve({ client: inngest, functions }));
 
+// routes
+app.use('/api/show',showRouter)
 
-// works directly on Render/Railway but requires restructuring for Vercel serverless functions.
-// app.listen(port,()=>{
-//     console.log(`app is listening on http://localhost:${port}`)
-// })
+
+
+app.listen(port,()=>{
+    console.log(`app is listening on http://localhost:${port}`)
+})
 
 export default app;
