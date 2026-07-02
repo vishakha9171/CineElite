@@ -23,11 +23,11 @@ app.use(clerkMiddleware())
 await connectDB();
 
 
-// API routes
+// Home API routes
 app.get("/",(req,res)=>{
     res.send("server is running")
 })
-
+// // Status API routes
 app.get('/api/status', (req, res) => {
   res.status(200).json({ 
     success: true, 
@@ -37,6 +37,7 @@ app.get('/api/status', (req, res) => {
 
 // Set up the "/api/inngest" (recommended) routes with the serve handler
 app.use("/api/inngest", serve({ client: inngest, functions }));
+
 
 // routes
 app.use('/api/show',showRouter)

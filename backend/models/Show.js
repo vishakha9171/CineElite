@@ -6,17 +6,7 @@ const showSchema = new mongoose.Schema(
       type: String, 
       required: true, 
       ref: 'Movie' 
-    },
-    theater: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Theater',
-      required: true
-    },
-    screenName: {
-      type: String,
-      required: true,
-      default: "Screen 1"
-    },
+    },    
     showDateTime: { 
       type: Date, 
       required: true 
@@ -29,11 +19,6 @@ const showSchema = new mongoose.Schema(
       type: [String], 
       default: [] 
     },
-    totalSeats: {
-      type: Number,
-      required: true,
-      default: 60
-    }
   }, 
   { 
     minimize: false,
