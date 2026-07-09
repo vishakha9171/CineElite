@@ -2,12 +2,15 @@ import { ArrowRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 // import files
-import {dummyShowsData} from '../assets/assets'
+// import {dummyShowsData} from '../assets/assets'
 import MovieCard from './MovieCard';
 import BackdropCircle from './BackdropCircle';
+import { useAppContext } from '../context/AppContextProvider';
 
 const FeaturedSection = () => {
   const navigate = useNavigate();
+
+  const {shows}=useAppContext();
 
 
 // gap-8 =>rem-2 px-32 || 1->.25rem,4px
@@ -27,7 +30,7 @@ const FeaturedSection = () => {
       </div>
 
       <div className='relative z-20 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8 justify-items-center'>
-        {dummyShowsData.slice(0, 4).map((movie) => (
+        {shows.slice(0, 4).map((movie) => (
           <MovieCard key={movie._id || movie.id} movie={movie} />
         ))}
       </div>

@@ -1,46 +1,49 @@
-import { useState, useEffect } from 'react'
-import { dummyShowsData } from '../assets/assets'
+// import { useState, useEffect } from 'react'
+// import { dummyShowsData } from '../assets/assets'
 import MovieCard from '../components/MovieCard'
 import BackdropCircle from '../components/BackdropCircle'
 import { Heart } from 'lucide-react' 
+import { useAppContext } from '../context/AppContextProvider'
 
 const Favorites = () => {
+
+  const {favoriteMovies}=useAppContext()
   // Local storage can only save text strings.
   // JSON.parse(...): Converts that string back into a real JavaScript array of IDs
 
   //passing an anonymous callback function () => { ... } inside useState.The Magic: React will only 
   // execute this block of code once, at the exact moment the component mounts for the first time.
 
-  const [favoriteMovies, setFavoriteMovies] = useState(() => {
-    const savedFavorites = JSON.parse(localStorage.getItem('likedMovies')) || []
-    if (savedFavorites.length > 0) {
-      return dummyShowsData.filter(movie => savedFavorites.includes(movie._id || movie.id))
-    }
-    return [dummyShowsData[0], dummyShowsData[1]]
-  })
+  // const [favoriteMovies, setFavoriteMovies] = useState(() => {
+  //   const savedFavorites = JSON.parse(localStorage.getItem('likedMovies')) || []
+  //   if (savedFavorites.length > 0) {
+  //     return dummyShowsData.filter(movie => savedFavorites.includes(movie._id || movie.id))
+  //   }
+  //   return [dummyShowsData[0], dummyShowsData[1]]
+  // })
 
-  useEffect(() => {
-    const syncFavorites = () => {
-      const savedFavorites = JSON.parse(localStorage.getItem('likedMovies')) || []
-      if (savedFavorites.length > 0) {
-        const filtered = dummyShowsData.filter(movie => savedFavorites.includes(movie._id || movie.id))
-        setFavoriteMovies(filtered)
-      } else {
-        setFavoriteMovies([])
-      }
-    }
+  // useEffect(() => {
+  //   const syncFavorites = () => {
+  //     const savedFavorites = JSON.parse(localStorage.getItem('likedMovies')) || []
+  //     if (savedFavorites.length > 0) {
+  //       const filtered = dummyShowsData.filter(movie => savedFavorites.includes(movie._id || movie.id))
+  //       setFavoriteMovies(filtered)
+  //     } else {
+  //       setFavoriteMovies([])
+  //     }
+  //   }
 
 
-    // 1. window.addEventListener('storage_update', syncFavorites):This line tells the browser: "Keep your ears open.
-    //  Whenever a storage_update event happens anywhere on this website, immediately run the syncFavorites function."
-    // The Problem it Solves: When a user clicks a heart button inside a MovieCard, that card updates localStorage,
-    //  but the Favorites component has no natural way of knowing that something changed.
-    window.addEventListener('storage_update', syncFavorites)
-    return () => {
-      // tells the browser: "If the user navigates away from the Favorites page, detach the ears
-      window.removeEventListener('storage_update', syncFavorites)
-    }
-  }, [])
+  //   // 1. window.addEventListener('storage_update', syncFavorites):This line tells the browser: "Keep your ears open.
+  //   //  Whenever a storage_update event happens anywhere on this website, immediately run the syncFavorites function."
+  //   // The Problem it Solves: When a user clicks a heart button inside a MovieCard, that card updates localStorage,
+  //   //  but the Favorites component has no natural way of knowing that something changed.
+  //   window.addEventListener('storage_update', syncFavorites)
+  //   return () => {
+  //     // tells the browser: "If the user navigates away from the Favorites page, detach the ears
+  //     window.removeEventListener('storage_update', syncFavorites)
+  //   }
+  // }, [])
 
   return favoriteMovies.length > 0 ? (
     <div className='relative w-full py-24 px-6 md:px-16 lg:px-36 xl:px-44 bg-[#0a0f1d] text-white min-h-screen 

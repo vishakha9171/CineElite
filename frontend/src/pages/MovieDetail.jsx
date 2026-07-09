@@ -1,111 +1,111 @@
 import { useState, useEffect } from "react";
 import { useParams } from 'react-router-dom';
-import { dummyDateTimeData, dummyShowsData, dummyTrailers } from "../assets/assets";
+// import { dummyDateTimeData, dummyShowsData, dummyTrailers } from "../assets/assets";
 import { StarIcon, PlayCircleIcon, Heart, X } from 'lucide-react';
 import timeFormat from '../lib/timeFormat';
 import BackdropCircle from '../components/BackdropCircle';
 import FeaturedSection from "../components/FeaturedSection";
 import BookingSection from "../components/BookingSection";
 import Loading from "../components/Loading";
+import toast from "react-hot-toast";
+import { useAppContext } from "../context/AppContextProvider";
 
 
 function MovieDetail() {
   const { id } = useParams();
   
-  const [show, setShow] = useState(null);
-  const [dateSlots, setDateSlots] = useState({});
+  const [movie, setMovie] = useState(null);
+  const [dateSlots,setDateSlots]=useState({})
+
   const [selectedDate, setSelectedDate] = useState("");
   const [selectedTime, setSelectedTime] = useState("");
+
   const [isLiked, setIsLiked] = useState(false);
   const [showTrailer, setShowTrailer] = useState(false);
   const [trailerUrl, setTrailerUrl] = useState("");
 
 
-  useEffect(() => {
-    const movieShow = dummyShowsData.find(m => m._id === id || m.id?.toString() === id);
-    if (movieShow) {
-      const validatedCasts = movieShow.casts?.map(cast => ({
-        ...cast,
-        profile_path: cast.profile_path && !cast.profile_path.startsWith('http')
-          ? `https://image.tmdb.org/t/p/w185${cast.profile_path}`
-          : cast.profile_path
-      })) || [];
+  const { axios, getToken, user, fetchFavoriteMovies, favoriteMovies, image_base_url } = useAppContext();
 
-      if(movieShow){
-        setShow({
-        movie: { ...movieShow, casts: validatedCasts },
-        dateTime: dummyDateTimeData
-      });
-      }
+  const getShow = async () => {
+    try {
+      const { data } = await axios.get(`/api/show/${id}`);
       
-      const validSlots = {};
-      Object.keys(dummyDateTimeData).forEach(date => {
-        const slotsForDate = dummyDateTimeData[date].filter(slot => slot.showId === id);
-        if (slotsForDate.length > 0) {
-          validSlots[date] = slotsForDate;
+      if (data.success) {
+        setMovie(data.movie);
+        setDateSlots(data.dateTime || {})
+
+        const availableDates = Object.keys(data.dateTime || {});
+        if (availableDates.length > 0) {
+          setSelectedDate(availableDates[0]);
         }
-      });
-      setDateSlots(validSlots);
 
-      
-      const availableDates = Object.keys(validSlots);
-      if (availableDates.length > 0) {
-        setSelectedDate(availableDates[0]);
-      }
-
-      const savedFavorites = JSON.parse(localStorage.getItem('likedMovies')) || [];
-      setIsLiked(savedFavorites.includes(movieShow._id || movieShow.id));
-
-      const showIndex = dummyShowsData.findIndex(m => m._id === id || m.id?.toString() === id);
-      if (showIndex !== -1 && dummyTrailers[showIndex]) {
-        try {
-          const fullUrl = dummyTrailers[showIndex].videoUrl;
-// new URL(fullUrl) transforms a simple text string into a smart JavaScript object that natively understands web addresses.
-          const urlObj = new URL(fullUrl);
- // .searchParams.get("v") looks for the standard YouTube query string parameter after the ?v= text segment and extracts just the 11-character video ID code.
-          const videoId = urlObj.searchParams.get("v");
-          
-          if (videoId) {
-            setTrailerUrl(`https://www.youtube.com/embed/${videoId}`);
-          } else {
-            const pathSegments = urlObj.pathname.split("/");
-            const fallbackId = pathSegments[pathSegments.length - 1];
-            setTrailerUrl(`https://www.youtube.com/embed/${fallbackId}`);
+        if (data.movie?.trailer_url) {
+          try {
+          // new URL(fullUrl) transforms a simple text string into a smart JavaScript object that natively understands web addresses.
+            const fullUrl= data.movie.trailer_url 
+            const urlObj = new URL(fullUrl);
+          // .searchParams.get("v") looks for the standard YouTube query string parameter after the ?v= text segment and extracts just the 11-character video ID code.
+            const videoId = urlObj.searchParams.get("v");
+            
+            if (videoId) {
+              setTrailerUrl(`https://www.youtube.com/embed/${videoId}`);
+            } else {
+              const pathSegments = urlObj.pathname.split("/");
+              const fallbackId = pathSegments[pathSegments.length - 1];
+              setTrailerUrl(`https://www.youtube.com/embed/${fallbackId}`);
+            }
           }
-        } catch (error) {
-          const videoId = dummyTrailers[showIndex].videoUrl.split("v=")[1]?.split("&")[0];
-          if (videoId) {
-            setTrailerUrl(`https://www.youtube.com/embed/${videoId}`);
+          catch (error) {
+            const videoId = data.movie.trailer_url.split("v=")[1]?.split("&")[0];
+            if (videoId) {
+              setTrailerUrl(`https://www.youtube.com/embed/${videoId}`);
+            }
+            console.error(error.message)
           }
         }
       }
     }
+    catch(error) {
+      console.error(error.message);
+    }
+  };
+
+  useEffect(() => {
+    getShow();
   }, [id]);
 
+  useEffect(()=>{
+      if(movie) {
+        setIsLiked(favoriteMovies?.includes(movie?._id || movie?.id));
+      }
+  },[favoriteMovies,movie])
 
-  const toggleLike = () => {
-    const savedFavorites = JSON.parse(localStorage.getItem('likedMovies')) || [];
-    const movieId = show.movie._id || show.movie.id;
-    let updatedFavorites;
 
-    if (savedFavorites.includes(movieId)) {
-      updatedFavorites = savedFavorites.filter(favId => favId !== movieId);
-      setIsLiked(false);
-    } else {
-      updatedFavorites = [...savedFavorites, movieId];
-      setIsLiked(true);
+  const updateFavorite = async () => {
+    try {
+      if (!user) return toast.error("Please login to proceed");
+
+      const token=await getToken()
+      const { data } = await axios.post(
+        '/api/user/update-favorite', 
+        { movieId: movie._id || movie.id },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      if (data.success) {
+        await fetchFavoriteMovies();
+        toast.success(data.message);
+      }
+    } catch (error) {
+      console.log(error);
     }
-
-    localStorage.setItem('likedMovies', JSON.stringify(updatedFavorites));
-    window.dispatchEvent(new Event('storage_update'));
   };
 
 
-
-  if (!show) {
+  if (!movie) {
     return <Loading />;
   }
-
 
   return (
     <div className="w-full min-h-screen bg-[#070a13] text-white pb-32 select-none overflow-x-hidden antialiased">
@@ -114,7 +114,7 @@ function MovieDetail() {
       <div className="relative w-full h-[60vh] md:h-[75vh] overflow-hidden">
         <div className="absolute inset-0 z-0">
           <img 
-            src={show.movie.backdrop_path} 
+            src={image_base_url+movie.backdrop_path} 
             alt="" 
             className="w-full h-full object-cover opacity-35 scale-100 filter brightness-90 saturate-125 transition-transform duration-1000" 
           />
@@ -133,7 +133,7 @@ function MovieDetail() {
             <div className="absolute -inset-1 bg-gradient-to-b from-primary/30 to-violet-600/10 rounded-2xl blur-xl
              opacity-75 group-hover:opacity-100 transition duration-700" />
             <img 
-              src={show.movie.poster_path} 
+              src={image_base_url+movie.poster_path} 
               alt="" 
               className="relative rounded-2xl h-[420px] w-[280px] md:h-[480px] md:w-[320px] object-cover shadow-2xl border
                border-white/10" 
@@ -146,27 +146,27 @@ function MovieDetail() {
             
             <div>
               <p className="text-primary font-bold text-xs uppercase tracking-[0.25em] mb-2 drop-shadow-md">
-                {show.movie.original_language || "ENGLISH"}
+                {movie.original_language || "ENGLISH"}
               </p>
               <h1 className="text-4xl md:text-5xl font-black text-balance tracking-tight leading-tight bg-gradient-to-b
                from-white via-zinc-100 to-zinc-400 bg-clip-text text-transparent">
-                {show.movie.title}
+                {movie.title}
               </h1>
             </div>
             
             <div className="flex flex-wrap items-center justify-center lg:justify-start gap-3 text-xs font-semibold text-zinc-400">
-              <span className="bg-zinc-900/40 border border-zinc-800/40 px-3 py-1.5 rounded-full">{timeFormat(show.movie.runtime)}</span>
+              <span className="bg-zinc-900/40 border border-zinc-800/40 px-3 py-1.5 rounded-full">{timeFormat(movie.runtime)}</span>
               <span className="text-zinc-700">•</span>
               <span className="flex items-center gap-1.5 bg-zinc-900/80 border border-zinc-800/80 px-3 py-1.5 rounded-full text-zinc-200">
                 <StarIcon className="w-4 h-4 text-amber-400 fill-amber-400" /> 
-                <span>{show.movie.vote_average?.toFixed(1)}</span>
+                <span>{movie.vote_average?.toFixed(1)}</span>
               </span>
               <span className="text-zinc-700">•</span>
-              <span className="bg-zinc-900/40 border border-zinc-800/40 px-3 py-1.5 rounded-full">{show.movie.release_date?.split("-")[0]}</span>
+              <span className="bg-zinc-900/40 border border-zinc-800/40 px-3 py-1.5 rounded-full">{movie.release_date?.split("-")[0]}</span>
             </div>
 
             <div className="flex flex-wrap justify-center lg:justify-start gap-2">
-              {show.movie.genres?.map((genre, idx) => (
+              {movie.genres?.map((genre, idx) => (
                 <span key={idx} className="px-3 py-1 rounded-md text-[11px] font-bold tracking-wide uppercase bg-zinc-900/40 border
                  border-zinc-800/60 text-zinc-300">
                   {genre.name}
@@ -176,7 +176,7 @@ function MovieDetail() {
 
             <div className="space-y-2 pt-2">
               <p className="text-zinc-300 text-sm md:text-base leading-relaxed max-w-xl font-normal">
-                {show.movie.overview}
+                {movie.overview}
               </p>
             </div>
             
@@ -200,7 +200,7 @@ function MovieDetail() {
               </a>
 
               <button 
-                onClick={toggleLike}
+                onClick={()=>updateFavorite()}
                 className={`p-3 rounded-xl transition-all duration-300 cursor-pointer active:scale-95 border ${
                   isLiked 
                     ? "bg-red-500/10 text-red-500 border-red-500/30 shadow-lg shadow-red-500/10 scale-105" 
@@ -217,7 +217,7 @@ function MovieDetail() {
 
 
       {/* Cast Carousels Profile Scroll Deck Framework */}
-      {show.movie.casts && show.movie.casts.length > 0 && (
+      {movie.casts && movie.casts.length > 0 && (
         <div className="max-w-7xl mx-auto px-6 md:px-16 lg:px-36 mt-16 space-y-6 w-full">
           <p className="text-xs font-bold uppercase tracking-[0.2em] text-zinc-400 border-b border-zinc-800 pb-2">
             Your Favorite Cast
@@ -226,7 +226,7 @@ function MovieDetail() {
           <div className="relative w-full">
             <div className="overflow-x-auto no-scrollbar pt-2 pb-4 w-full">
               <div className="flex flex-row items-start gap-4 pr-16 w-max">
-                {show.movie.casts.slice(0, 11).map((cast, index) => {
+                {movie.casts.slice(0, 11).map((cast, index) => {
                   const initials = cast.name
                     ? cast.name.split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase()
                     : "?";
@@ -268,7 +268,7 @@ function MovieDetail() {
       {/* ye id jis anchor tag ke href me ya kisi bhi url me likhi hogi uspr click krne pr hum is div pr land krege*/}
       <div id="dateSelect" className="max-w-7xl mx-auto px-4 sm:px-8 md:px-16 lg:px-36 mt-20 scroll-mt-24">
         <BookingSection 
-          movieId={show.movie._id}
+          movieId={movie._id}
           dateSlots={dateSlots}
           selectedDate={selectedDate}
           setSelectedDate={setSelectedDate}

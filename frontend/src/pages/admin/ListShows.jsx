@@ -1,38 +1,57 @@
 import  { useState, useEffect } from 'react';
 import { Film, Calendar, TrendingUp, DollarSign, Eye, Trash2 } from 'lucide-react';
-import { dummyShowsData } from '../../assets/assets';
+// import { dummyShowsData } from '../../assets/assets';
 import Title from '../../components/admin/Title';
 import Loading from '../../components/Loading';
+import { useAppContext } from '../../context/AppContextProvider';
 
 const ListShows = () => {
   const currency = import.meta.env.VITE_CURRENCY || '₹';
   const [shows, setShows] = useState([]);
   const [loading, setLoading] = useState(true);
 
+    // context taken
+    const {getToken,axios,user,image_base_url}=useAppContext()
+
+  // const getAllShows = async () => {
+  //   try {
+  //     setShows([
+  //       {
+  //         movie: dummyShowsData[0],
+  //         showDateTime: "2025-06-30T02:30:00.000Z",
+  //         showPrice: 59,
+  //         occupiedSeats: {
+  //           A1: "user_1",
+  //           B1: "user_2",
+  //           C1: "user_3"
+  //         }
+  //       }
+  //     ]);
+  //     setLoading(false);
+  //   } catch (error) {
+  //     console.error(error);
+  //     setLoading(false);
+  //   }
+  // };
+
   const getAllShows = async () => {
-    try {
-      setShows([
-        {
-          movie: dummyShowsData[0],
-          showDateTime: "2025-06-30T02:30:00.000Z",
-          showPrice: 59,
-          occupiedSeats: {
-            A1: "user_1",
-            B1: "user_2",
-            C1: "user_3"
-          }
-        }
-      ]);
-      setLoading(false);
-    } catch (error) {
-      console.error(error);
-      setLoading(false);
-    }
-  };
+  try {
+    const token=await getToken()
+    const { data } = await axios.get("/api/admin/all-shows", {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+
+    setShows(data.shows);
+    setLoading(false);
+  } catch (error) {
+    console.error(error);
+  }
+};
 
   useEffect(() => {
-     getAllShows();
-  }, []);
+     if(user) getAllShows();
+  }, [user]);
+
 
   if (loading) {
     return <Loading />;
@@ -76,7 +95,7 @@ const ListShows = () => {
                       <div className="flex items-center gap-4">
                         {show.movie?.poster_path ? (
                           <img 
-                            src={show.movie.poster_path} 
+                            src={image_base_url+show.movie.poster_path} 
                             alt="" 
                             className="w-10 h-14 object-cover rounded-xl shadow-lg border border-zinc-800 transition 
                             duration-300 group-hover:border-zinc-700/80 group-hover:scale-102" 

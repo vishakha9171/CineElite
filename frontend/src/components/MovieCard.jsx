@@ -1,36 +1,68 @@
 import { StarIcon, Play, Heart } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import timeFormat from '../lib/timeFormat';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import {useAppContext} from '../context/AppContextProvider'
+import toast from 'react-hot-toast';
 
 const MovieCard = ({ movie }) => {
   const navigate = useNavigate();
 
-  // Initialize state directly from localStorage to prevent synchronous useEffect loops
-  const [isLiked, setIsLiked] = useState(() => {
-    const savedFavorites = JSON.parse(localStorage.getItem('likedMovies')) || [];
-    return savedFavorites.includes(movie._id || movie.id);
-  });
+  const { axios, getToken, user, fetchFavoriteMovies, favoriteMovies, image_base_url } = useAppContext();
 
-  const toggleLike = (e) => {
-    e.preventDefault();   
-    e.stopPropagation();  //prevent from redirted to movie route on clicking
+  const [isLiked, setIsLiked] = useState(false);
+
+  const updateFavorite = async () => {
+      try {
+        if (!user) return toast.error("Please login to proceed");
+  
+        const token=await getToken()
+        const { data } = await axios.post(
+          '/api/user/update-favorite', 
+          { movieId: movie.id },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+  
+        if(data.success) {
+          await fetchFavoriteMovies();
+          toast.success(data.message);
+        }
+      } catch (error) {
+        console.log(error.message);
+      }
+    };
+
+    useEffect(()=>{
+      if (favoriteMovies?.includes(movie?._id || movie?.id)) {
+        setIsLiked(true);
+      }
+    },[movie.id || movie._id , favoriteMovies])
+
+  // // Initialize state directly from localStorage to prevent synchronous useEffect loops
+  // const [isLiked, setIsLiked] = useState(() => {
+  //   const savedFavorites = JSON.parse(localStorage.getItem('likedMovies')) || [];
+  //   return savedFavorites.includes(movie._id || movie.id);
+  // });
+
+  // const toggleLike = (e) => {
+  //   e.preventDefault();   
+  //   e.stopPropagation();  //prevent from redirected to movie route on clicking
     
-    const savedFavorites = JSON.parse(localStorage.getItem('likedMovies')) || [];
-    const movieId = movie._id || movie.id;
-    let updatedFavorites;
+  //   const savedFavorites = JSON.parse(localStorage.getItem('likedMovies')) || [];
+  //   const movieId = movie._id || movie.id;
+  //   let updatedFavorites;
 
-    if (savedFavorites.includes(movieId)) {
-      updatedFavorites = savedFavorites.filter(id => id !== movieId);
-      setIsLiked(false);
-    } else {
-      updatedFavorites = [...savedFavorites, movieId];
-      setIsLiked(true);
-    }
+  //   if (savedFavorites.includes(movieId)) {
+  //     updatedFavorites = savedFavorites.filter(id => id !== movieId);
+  //     setIsLiked(false);
+  //   } else {
+  //     updatedFavorites = [...savedFavorites, movieId];
+  //     setIsLiked(true);
+  //   }
 
-    localStorage.setItem('likedMovies', JSON.stringify(updatedFavorites));
-    window.dispatchEvent(new Event('storage_update'));
-  };
+  //   localStorage.setItem('likedMovies', JSON.stringify(updatedFavorites));
+  //   window.dispatchEvent(new Event('storage_update'));
+  // };
 
   return (
     <div className='group flex flex-col justify-between p-3 bg-zinc-900/40 backdrop-blur-md border border-zinc-800/40 rounded-2xl
@@ -39,7 +71,7 @@ const MovieCard = ({ movie }) => {
       <div className='relative rounded-xl overflow-hidden h-52 w-full bg-zinc-950 shadow-md'>
         <img 
           onClick={() => { navigate(`/movies/${movie._id}`); window.scrollTo(0, 0); }}
-          src={movie.backdrop_path} 
+          src={image_base_url+movie.backdrop_path} 
           alt={movie.title} 
           className='h-full w-full object-cover object-center cursor-pointer transition-transform duration-700 ease-out group-hover:scale-105'
         />
@@ -56,7 +88,7 @@ const MovieCard = ({ movie }) => {
         </div>
         
         <button 
-          onClick={toggleLike}
+          onClick={()=>updateFavorite()}
           className={`absolute top-2.5 right-2.5 p-2 rounded-full backdrop-blur-md border z-20 transition-all duration-300 
             transform active:scale-75 cursor-pointer ${
             isLiked 

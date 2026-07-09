@@ -1,9 +1,14 @@
-import { dummyShowsData } from '../assets/assets'
+// import { dummyShowsData } from '../assets/assets'
 import MovieCard from '../components/MovieCard'
 import BackdropCircle from '../components/BackdropCircle'
+import { useAppContext } from '../context/AppContextProvider'
+
 
 const Movies = () => {
-  return dummyShowsData.length > 0 ? (
+
+  const {shows}=useAppContext()
+
+  return shows.length > 0 ? (
     <div className='relative w-full py-24 px-6 md:px-16 lg:px-36 xl:px-44 bg-[#0a0f1d] text-white min-h-screen overflow-hidden select-none'>
       
       <BackdropCircle top="100px" left="-50px" className="opacity-40 blur-[120px] bg-red-600 w-96 h-96" />
@@ -20,12 +25,12 @@ const Movies = () => {
           </h1>
         </div>
         <p className='text-sm text-gray-400 font-medium max-md:hidden'>
-          Showing {dummyShowsData.length} blockbusters near you
+          Showing {shows.length} blockbusters near you
         </p>
       </div>
 
       <div className='relative z-10 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8 xl:gap-10 justify-items-center'>
-        {dummyShowsData.map((movie) => (
+        {shows.map((movie) => (
           <div 
             key={movie._id || movie.id} 
             className='w-full transform hover:-translate-y-2 transition-all duration-500 ease-out hover:shadow-2xl hover:shadow-red-500/10 rounded-2xl overflow-hidden group'

@@ -8,7 +8,7 @@ const TrailersSection = () => {
   const [currentTrailer, setCurrentTrailer] = useState(dummyTrailers[0]);
   const [isPlaying, setIsPlaying] = useState(false);
 
-    const handleTrailerSelect = (trailer) => {
+  const handleTrailerSelect = (trailer) => {
     setIsPlaying(false);
     setCurrentTrailer(trailer);
   };
@@ -16,10 +16,9 @@ const TrailersSection = () => {
   return (
     <div className='relative px-6 md:px-16 lg:px-24 xl:px-44 py-20 overflow-hidden bg-zinc-950 text-white z-10'>
       <BackdropCircle />
-        {/* max-w-[960px] can be written as `max-w-240` means px is written in square bracket */}
-      <div className="max-w-240 mx-auto">
+      
+      <div className="max-w-[960px] mx-auto">
         <p className='text-zinc-300 font-medium text-lg tracking-wide mb-6'>Official Trailers</p>
-        
         
         <div className='relative aspect-video rounded-2xl overflow-hidden bg-zinc-900 shadow-2xl border border-zinc-800/50 group z-10'>
           {isPlaying ? (
@@ -49,18 +48,19 @@ const TrailersSection = () => {
           )}
         </div>
 
+        {/* Thumbnail Selector Row Grid */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-8">
           {dummyTrailers.map((trailer) => {
-
             const isActive = currentTrailer.videoUrl === trailer.videoUrl;
 
             return (
               <div 
-                key={trailer.image}
+                key={trailer.videoUrl} 
                 onClick={() => handleTrailerSelect(trailer)}
                 className={`relative aspect-video rounded-xl overflow-hidden cursor-pointer bg-zinc-900 border transition-all
-                     duration-300 transform hover:scale-[1.03] select-none ${isActive? 'border-primary shadow-lg shadow-primary/20 ring-1 ring-primary/30' 
-                    : 'border-zinc-800/60 hover:border-zinc-700 shadow-md'}`} >
+                   duration-300 transform hover:scale-[1.03] select-none ${isActive ? 'border-primary shadow-lg shadow-primary/20 ring-1 ring-primary/30' 
+                    : 'border-zinc-800/60 hover:border-zinc-700 shadow-md'}`} 
+              >
                 <img 
                   src={trailer.image} 
                   alt="Trailer thumbnail" 

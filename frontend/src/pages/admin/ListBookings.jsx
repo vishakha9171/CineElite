@@ -1,27 +1,45 @@
 import  { useState, useEffect } from 'react';
 import { User, Film, Calendar, Armchair, DollarSign, Receipt, CheckCircle, Clock } from 'lucide-react';
-import { dummyBookingData } from '../../assets/assets';
+// import { dummyBookingData } from '../../assets/assets';
 import Title from '../../components/admin/Title';
 import Loading from '../../components/Loading';
+import { useAppContext } from '../../context/AppContextProvider';
 
 const ListBookings = () => {
   const currency = import.meta.env.VITE_CURRENCY || '₹';
   const [bookings, setBookings] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
+  const {getToken,axios,user}=useAppContext()
+
+  // const getAllBookings = async () => {
+  //   try {
+  //     setBookings(dummyBookingData || []);
+  //     setIsLoading(false);
+  //   } catch (error) {
+  //     console.error(error);
+  //     setIsLoading(false);
+  //   }
+  // };
+
   const getAllBookings = async () => {
-    try {
-      setBookings(dummyBookingData || []);
-      setIsLoading(false);
-    } catch (error) {
-      console.error(error);
-      setIsLoading(false);
-    }
-  };
+  try {
+    const token=await getToken()
+    const { data } = await axios.get("/api/admin/all-bookings", {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+
+    setBookings(data.bookings);
+  } catch (error) {
+    console.error(error);
+  }
+  setIsLoading(false);
+};
 
   useEffect(() => {
-    getAllBookings();
-  }, []);
+    if(user) getAllBookings();
+  }, [user]);
+
 
   if (isLoading) {
     return <Loading />;

@@ -1,22 +1,41 @@
 import  { useState, useEffect } from 'react';
 import { Ticket, Calendar, Clock, Receipt, CreditCard } from 'lucide-react';
-import { dummyBookingData } from '../assets/assets';
+// import { dummyBookingData } from '../assets/assets';
 import BackdropCircle from '../components/BackdropCircle';
 import timeFormat from '../lib/timeFormat';
 import Loading from "../components/Loading";
+import {useAppContext} from '../context/AppContextProvider'
 
 const MyBookings = () => {
   const currency = import.meta.env.VITE_CURRENCY || '₹';
+
+
+  const { axios, getToken, user, image_base_url } = useAppContext();
+
   const [bookings, setBookings] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    // Simulating API loading cycle using your global mock tracking records
-    if (dummyBookingData) {
-      setBookings(dummyBookingData);
+  const getMyBookings = async () => {
+    try {
+      const token=await getToken()
+      const { data } = await axios.get('/api/user/bookings', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      if (data.success) {
+        setBookings(data.bookings);
+      }
+    } catch (error) {
+      console.log(error);
     }
     setIsLoading(false);
-  }, []);
+  };
+
+  useEffect(() => {
+    if (user) {
+      getMyBookings();
+    }
+  }, [user]);
 
   
   if (isLoading) {
@@ -63,7 +82,7 @@ const MyBookings = () => {
                     <div className="w-full sm:w-28 h-40 md:w-32 md:h-44 shrink-0 overflow-hidden rounded-xl border
                      border-zinc-800/80 shadow-md relative group">
                       <img 
-                        src={movie.poster_path} 
+                        src={image_base_url+movie.poster_path} 
                         alt="" 
                         className="w-full h-full object-cover object-center transition duration-500 group-hover:scale-105" 
                       />

@@ -8,15 +8,19 @@ import {
   Calendar,
   Clock
 } from 'lucide-react';
-import { dummyDashboardData } from '../../assets/assets';
+// import { dummyDashboardData } from '../../assets/assets';
 import Title from '../../components/admin/Title';
 import timeFormate from '../../lib/timeFormat'
 import Loading from '../../components/Loading'
+import toast from 'react-hot-toast';
+import { useAppContext } from '../../context/AppContextProvider';
+
 
 
 const Dashboard = () => { 
   
   const currency = import.meta.env.VITE_CURRENCY || '₹';
+
   
   const [dashboardData, setDashboardData] = useState({
     totalBookings: 0,
@@ -25,13 +29,36 @@ const Dashboard = () => {
     totalUser: 0
   });
   const [loading, setLoading] = useState(true);
+  
+
+    // context taken
+    const {getToken,axios,user,image_base_url}=useAppContext()
+
+  const fetchDashboardData = async () => {
+  try {
+    const token=await getToken()
+    const { data } = await axios.get("/api/admin/dashboard", {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
+
+    if (data.success) {
+      setDashboardData(data.dashboardData);
+      setLoading(false);
+    } else {
+      toast.error(data.message);
+    }
+  } catch (error) {
+    toast.error("Error fetching dashboard data:", error.message);
+  }
+};
 
   useEffect(() => {
-    if (dummyDashboardData) {
-      setDashboardData(dummyDashboardData);
+    if (user) {
+   fetchDashboardData()
     }
-    setLoading(false);
-  }, []);
+  }, [user]);
 
   const dashboardCards = [
     {
@@ -126,7 +153,7 @@ const Dashboard = () => {
                 >
                   <div className="w-full h-64 overflow-hidden border-b border-zinc-800 relative bg-zinc-950">
                     <img 
-                      src={movie.poster_path} 
+                      src={image_base_url + movie.poster_path} 
                       alt="" 
                       className="w-full h-full object-cover object-center transition duration-500 group-hover:scale-105"
                     />

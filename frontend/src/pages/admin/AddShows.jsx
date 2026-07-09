@@ -5,8 +5,11 @@ import Title from '../../components/admin/Title';
 import Loading from '../../components/Loading';
 import { votesFormat } from '../../lib/votesFormat';
 import { useAppContext } from '../../context/AppContextProvider';
+import toast from 'react-hot-toast';
+
 
 const AddShows = () => {
+
   const currency = import.meta.env.VITE_CURRENCY || '₹';
 
   const [nowPlayingMovies, setNowPlayingMovies] = useState([]);
@@ -23,19 +26,25 @@ const AddShows = () => {
 
   const fetchNowPlayingMovies = async () => {
     try{
-      const data=axios.get("/api/shows/now-playing",{headers:{
-        Authorization:`Bearer ${await getToken()}`
+      const token=await getToken()
+      const {data}=await axios.get("/api/shows/now-playing",{headers:{
+        Authorization:`Bearer ${token}`
       }})
-      if(data.success) setNowPlayingMovies(data.movies);
+      if(data.success)
+      {
+        setNowPlayingMovies(data.movies)
+        setLoading(false)
+      }
     }
     catch(error){
-      console.error("error data fetching movies",error)
+      console.error("error  fetching movies",error.message)
     }
   };
 
   useEffect(() => {
     if(user) fetchNowPlayingMovies();
   }, [user]);
+
 
   const handleDateTimeAdd = () => {
     if (!dateInput || !timeInput) return;
@@ -53,6 +62,7 @@ const AddShows = () => {
     setTimeInput("");
   };
 
+
   const handleRemoveTime = (date, timeToRemove) => {
     setDateTimeSelection((prev) => {
       const updatedTimes = prev[date].filter((t) => t !== timeToRemove);
@@ -67,6 +77,41 @@ const AddShows = () => {
       return newSelection;
     });
   };
+
+  const handleSubmit=async()=>{
+    try{
+      const showsInput=Object.entries(dateTimeSelection).map(([date,time])=>({date,time}))
+
+      // data which the admin is going to publish
+      const payload={
+        movieId:selectedMovie,
+        showsInput,
+        showPrice: Number(showPrice)
+      }
+
+      const token=await getToken()
+      // console.log(token)
+      const {data}=await axios.post("/api/shows/add",payload,{
+        headers:{Authorization:`Bearer ${token}`}
+      })
+      // console.log(data.success)
+
+      if(data.success){
+        toast.success(data.message)
+        setDateTimeSelection({})
+        setShowPrice("")
+        setSelectedMovie(null)
+      }
+      else{
+        toast.error(data.message)
+      }
+    }
+    catch(error){
+      console.error("Submission error",error.message)
+      toast.error("an error occurred.Please try again")
+    }
+  }
+
 
   if (loading) {
     return <Loading />;
@@ -90,7 +135,7 @@ const AddShows = () => {
             <p className="text-xs font-black uppercase tracking-[0.25em] text-zinc-500">
               01 \ Selection Terminal
             </p>
-            <p className="text-sm font-semibold text-zinc-300">Choose a target catalog title to schedule</p>
+            <p className="text-sm font-semibold text-zinc-300">Choose a Movie to schedule</p>
           </div>
         </div>
 
@@ -102,7 +147,8 @@ const AddShows = () => {
                 <div
                   key={movie.id || movie.movie_id}
                   onClick={() => setSelectedMovie(movie.movie_id || movie.id)}
-                  className={`w-44 bg-zinc-900/10 border rounded-[2rem] overflow-hidden backdrop-blur-md cursor-pointer transition-all duration-500 transform hover:-translate-y-2 group-hover/deck:not-hover:opacity-30 hover:!opacity-100 group-hover/deck:not-hover:scale-98 ${
+                  className={`w-44 bg-zinc-900/10 border rounded-[2rem] overflow-hidden backdrop-blur-md cursor-pointer transition-all duration-500 transform 
+                    hover:-translate-y-2 group-hover/deck:not-hover:opacity-30 hover:!opacity-100 group-hover/deck:not-hover:scale-98 ${
                     isSelected
                       ? "border-[#ff2c55] ring-4 ring-[#ff2c55]/10 bg-zinc-900/40 shadow-2xl shadow-[#ff2c55]/10 scale-102"
                       : "border-zinc-800/50 shadow-lg"
@@ -110,18 +156,21 @@ const AddShows = () => {
                 >
                   <div className="w-full h-60 overflow-hidden relative bg-zinc-950">
                     <img
-                      src={image_base_url+movie.poster_path}
+                      src={image_base_url + movie.poster_path}
                       alt=""
-                      className={`w-full h-full object-cover transition-all duration-700 ease-out ${isSelected ? "brightness-100 scale-102" : "brightness-[0.75] group-hover:scale-105"}`}
+                      className={`w-full h-full object-cover transition-all duration-700 ease-out 
+                        ${isSelected ? "brightness-100 scale-102" : "brightness-[0.75] group-hover:scale-105"}`}
                     />
                     
                     {isSelected && (
-                      <div className="absolute top-3 right-3 flex items-center justify-center bg-[#ff2c55] h-7 w-7 rounded-xl shadow-xl shadow-[#ff2c55]/30 border border-white/10 animate-scaleIn">
+                      <div className="absolute top-3 right-3 flex items-center justify-center bg-[#ff2c55] h-7 w-7 rounded-xl shadow-xl 
+                      shadow-[#ff2c55]/30 border border-white/10 animate-scaleIn">
                         <Check className="w-4 h-4 text-white" strokeWidth={3.5} />
                       </div>
                     )}
 
-                    <div className="absolute bottom-0 left-0 w-full p-3 bg-gradient-to-t from-zinc-950 via-zinc-950/90 to-transparent flex items-center justify-between text-[10px] font-black tracking-wide">
+                    <div className="absolute bottom-0 left-0 w-full p-3 bg-gradient-to-t from-zinc-950 via-zinc-950/90 to-transparent
+                     flex items-center justify-between text-[10px] font-black tracking-wide">
                       <div className="flex items-center gap-1 text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-lg">
                         <Star className="w-3 h-3 fill-amber-400" />
                         <span>{movie.vote_average?.toFixed(1) || "0.0"}</span>
@@ -159,7 +208,7 @@ const AddShows = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
             <div className="space-y-2.5">
               <label className="block text-[10px] font-black uppercase tracking-widest text-zinc-400 pl-1">
-                Show Valuation
+                Show Price
               </label>
               <div className="flex items-center gap-3 border border-zinc-800 bg-zinc-950/30 px-4 py-3.5 rounded-2xl w-full focus-within:border-[#ff2c55] focus-within:ring-4 focus-within:ring-[#ff2c55]/5 transition-all duration-300 shadow-inner">
                 <span className="text-sm font-bold text-zinc-500 select-none">{currency}</span>
@@ -184,7 +233,7 @@ const AddShows = () => {
                   type="date"
                   value={dateInput}
                   onChange={(e) => setDateInput(e.target.value)}
-                  className="bg-transparent text-sm font-semibold text-zinc-300 outline-none w-full text-zinc-400 [color-scheme:dark]"
+                  className="bg-transparent text-sm font-semibold text-zinc-300 outline-none w-full text-zinc-400 [color-scheme:light]"
                 />
               </div>
             </div>
@@ -201,7 +250,7 @@ const AddShows = () => {
                   type="time"
                   value={timeInput}
                   onChange={(e) => setTimeInput(e.target.value)}
-                  className="bg-transparent text-sm font-semibold text-zinc-300 outline-none w-full text-zinc-400 [color-scheme:dark]"
+                  className="bg-transparent text-sm font-semibold text-zinc-300 outline-none w-full text-zinc-400 [color-scheme:light]"
                 />
               </div>
               <button
@@ -228,7 +277,7 @@ const AddShows = () => {
             {Object.keys(dateTimeSelection).length > 0 ? (
               <div className="space-y-4 max-h-[320px] overflow-y-auto pr-1 no-scrollbar animate-fadeIn">
                 <h2 className="text-[10px] font-black uppercase tracking-widest text-zinc-500 flex items-center gap-2 pl-1">
-                  <Clock className="w-3.5 h-3.5 text-[#ff2c55]" /> Confirmed Time Tracks
+                  <Clock className="w-3.5 h-3.5 text-[#ff2c55]" /> Confirmed Time 
                 </h2>
                 <ul className="space-y-3">
                   {Object.entries(dateTimeSelection).map(([date, times]) => (
@@ -268,7 +317,7 @@ const AddShows = () => {
               </div>
             ) : (
               <div className="h-44 flex flex-col items-center justify-center border border-dashed border-zinc-800 rounded-[2rem] bg-zinc-950/10 text-zinc-600 text-xs font-medium italic text-center p-6">
-                No active timing matrices mapped to the console workspace buffer.
+                No active timing matrices mapped.
               </div>
             )}
           </div>
@@ -276,9 +325,9 @@ const AddShows = () => {
 
       </div>
 
-      {/* 🚀 FLOATING SYSTEM TRIGGER: Anchored out at the extreme right browser corner level */}
+
       <div className="fixed bottom-6 right-6 md:bottom-10 md:right-10 z-50 animate-slideUp">
-        <button
+        <button onClick={()=>handleSubmit()}
           type="button"
           disabled={!selectedMovie || !showPrice || Object.keys(dateTimeSelection).length === 0}
           className="flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-[#ff2c55] to-[#cc1b40] hover:opacity-95 active:scale-95 text-white font-black text-xs uppercase tracking-widest rounded-2xl shadow-2xl shadow-[#ff2c55]/30 cursor-pointer transition-all duration-300 disabled:opacity-20 disabled:cursor-not-allowed disabled:shadow-none border border-white/10 group/publish"
