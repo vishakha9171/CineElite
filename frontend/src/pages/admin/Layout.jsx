@@ -10,9 +10,9 @@ import Loading from '../../components/Loading';
 
 const Layout = () => {
 
-    // const {isAdmin}=useAppContext()
+    const {isAdmin}=useAppContext()
     // console.log("Layout:", isAdmin);
-    const isAdmin=true;
+    // const isAdmin=true;
 
   return isAdmin?(
     <div className="w-full min-h-screen bg-[#070a13] font-sans antialiased text-white overflow-x-hidden">

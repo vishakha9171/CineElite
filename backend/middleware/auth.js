@@ -5,19 +5,18 @@ import { clerkClient } from '@clerk/express'
 export const protectAdmin = async (req, res, next) => {
   try {
     const { userId } = req.auth();
-
     // console.log("UserId:", userId);
 
     const user = await clerkClient.users.getUser(userId);
-
     // console.log(user.privateMetadata);
 
     if (!user.privateMetadata || user.privateMetadata.role !== 'admin') {
-      return res.status(403).json({ success: false, message: "not authorized" })
+      res.json({ success: false, message: "not authorized" }) //status 403 (Forbidden)
     }
 
     next();
+
   } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
+    res.status(500).json({ success: false, message: error.message });
   }
 }

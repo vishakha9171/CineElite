@@ -44,7 +44,8 @@ export const AppContextProvider=({children})=>{
             const {data}=await axios.get("/api/user/favorites",{
                 headers:{Authorization:`Bearer ${token}`}})
             if(data.success){
-                setFavoriteMovies(data.movies)
+                setFavoriteMovies(data.movies.map(movie => movie._id));
+                // console.log(favoriteMovies);
             }
             else{
                 setFavoriteMovies([]);
@@ -66,9 +67,10 @@ export const AppContextProvider=({children})=>{
             const {data}=await axios.get("/api/admin/is-admin",{
                 headers:{Authorization:`Bearer ${token}`}
             })
-            // console.log("API response:", data);
-            setIsAdmin(data.isAdmin);
-            if(!data.isAdmin && location.pathname.startsWith("/admin"))
+            // console.log("API response:", data.success);
+
+            await setIsAdmin(data.success);
+            if(!data.success && location.pathname.startsWith("/admin"))
             {
                 navigate("/")
                 toast.error("you are not authorized to access admin Dashboard")

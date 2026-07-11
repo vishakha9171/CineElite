@@ -5,6 +5,7 @@ import Show from "../models/Show.js";
 // API to get all the nowPlaying movies from imdb endpoint
 export const getNowPlayingMovies=async(req,res)=>{
    try{
+    
      const {data}=await axios.get('https://api.themoviedb.org/3/movie/now_playing',{
         headers:{
             'Authorization': `Bearer ${process.env.TMDB_API_KEY}`,
@@ -24,25 +25,37 @@ export const getNowPlayingMovies=async(req,res)=>{
 export const addShow = async (req, res) => {
   try {
     const { movieId, showsInput, showPrice } = req.body;
+    
+    // console.log(movieId);
 
     let movie = await Movie.findById(movieId);
 
+    // console.log(process.env.TMDB_API_KEY);
+
     if (!movie) {
-      const [movieDetailsResponse, movieCreditsResponse] = await Promise.all([
+      const [movieDetailsResponse, movieCreditsResponse, movieVideosResponse] = await Promise.all([
         axios.get(`https://api.themoviedb.org/3/movie/${movieId}`, {
           headers: { 'Authorization': `Bearer ${process.env.TMDB_API_KEY}`}
         }),
+        
         axios.get(`https://api.themoviedb.org/3/movie/${movieId}/credits`, {
+          headers: { 'Authorization': `Bearer ${process.env.TMDB_API_KEY}`}
+        }),
+
+        axios.get(`https://api.themoviedb.org/3/movie/${movieId}/videos`, {
           headers: { 'Authorization': `Bearer ${process.env.TMDB_API_KEY}`}
         })
       ]);
 
       const movieApiData = movieDetailsResponse.data;
       const movieCreditsData = movieCreditsResponse.data;
+      const movieVideosData=movieVideosResponse.data
+
 
       const formattedGenres = movieApiData.genres 
         ? movieApiData.genres.map(g => g.name) 
         : ["General"];
+
 
       const formattedCasts = movieCreditsData.cast 
         ? movieCreditsData.cast.slice(0, 10).map(c => ({
@@ -51,6 +64,14 @@ export const addShow = async (req, res) => {
             profile_path: c.profile_path || ""
           }))
         : [];
+
+
+      const trailer = movieVideosData.results.find(
+          v => v.site === "YouTube" && v.type === "Trailer" && v.official==="true"
+      );
+      const trailerUrl = trailer
+          ? `https://www.youtube.com/embed/${trailer.key}`
+          : "";
 
       const movieDetails = {
         _id: movieId,
@@ -71,7 +92,7 @@ export const addShow = async (req, res) => {
         dimensions: req.body.dimensions || ["2D"],
         content_rating: req.body.content_rating || "PG-13",
         status: "Now Showing",
-        trailer_url: req.body.trailer_url || ""
+        trailer_url: trailerUrl
       };
 
       movie = await Movie.create(movieDetails);
@@ -103,6 +124,7 @@ export const addShow = async (req, res) => {
     res.json({ success: false, message: error.message });
   }
 };
+
 
 
 // API to get all upcoming shows grouped by unique movies from the database

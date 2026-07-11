@@ -4,10 +4,15 @@ import MovieCard from '../components/MovieCard'
 import BackdropCircle from '../components/BackdropCircle'
 import { Heart } from 'lucide-react' 
 import { useAppContext } from '../context/AppContextProvider'
+// import { useEffect, useState } from 'react'
 
 const Favorites = () => {
 
-  const {favoriteMovies}=useAppContext()
+  const {shows,favoriteMovies}=useAppContext()
+
+  const favoriteMovieObj = shows.filter(movie =>
+  favoriteMovies.includes(movie._id))
+
   // Local storage can only save text strings.
   // JSON.parse(...): Converts that string back into a real JavaScript array of IDs
 
@@ -69,7 +74,7 @@ const Favorites = () => {
       </div>
 
       <div className='relative z-10 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8 xl:gap-10 justify-items-center'>
-        {favoriteMovies.map((movie) => (
+        {favoriteMovieObj.map((movie) => (
           <div 
             key={movie._id || movie.id} 
             className='w-full flex justify-center'

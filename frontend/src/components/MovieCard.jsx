@@ -19,7 +19,7 @@ const MovieCard = ({ movie }) => {
         const token=await getToken()
         const { data } = await axios.post(
           '/api/user/update-favorite', 
-          { movieId: movie.id },
+          { movieId: movie._id || movie.id },
           { headers: { Authorization: `Bearer ${token}` } }
         );
   
@@ -33,10 +33,10 @@ const MovieCard = ({ movie }) => {
     };
 
     useEffect(()=>{
-      if (favoriteMovies?.includes(movie?._id || movie?.id)) {
-        setIsLiked(true);
+      if (movie) {
+        setIsLiked(favoriteMovies?.includes(movie._id));
       }
-    },[movie.id || movie._id , favoriteMovies])
+    },[movie, favoriteMovies])
 
   // // Initialize state directly from localStorage to prevent synchronous useEffect loops
   // const [isLiked, setIsLiked] = useState(() => {
@@ -112,7 +112,7 @@ const MovieCard = ({ movie }) => {
         <span>{new Date(movie.release_date).getFullYear()}</span>
         <span>•</span>
         <span className='truncate max-w-[120px]'>
-          {movie.genres?.slice(0, 2).map(genre => genre.name).join(" | ")}
+          {movie.genres?.slice(0, 2).map(genre => genre).join(" | ")}
         </span>
         <span>•</span>
         <span>{timeFormat(movie.runtime)}</span>

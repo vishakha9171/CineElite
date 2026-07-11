@@ -1,25 +1,25 @@
 import  { useState, useEffect } from 'react';
 import { Calendar,  Star,  Flame, Sparkles,  Ticket, Heart } from 'lucide-react';
-import { dummyShowsData } from '../assets/assets'; 
+// import { dummyShowsData } from '../assets/assets'; 
 import { votesFormat } from '../lib/votesFormat';
+import { useAppContext } from '../context/AppContextProvider';
+import Loading from '../components/Loading';
 
 const Releases = () => {
   const [movies, setMovies] = useState([]);
   const [activeTab, setActiveTab] = useState('now-playing');
   const [loading, setLoading] = useState(true);
 
+  const {shows,image_base_url}=useAppContext()
+
   useEffect(() => {
-    if (dummyShowsData) {
-      setMovies(dummyShowsData);
-    }
+    setMovies(shows);
     setLoading(false);
-  }, []);
+}, [shows]);
 
   if (loading) {
     return (
-      <div className="w-full h-[60vh] flex items-center justify-center bg-[#070a13]">
-        <div className="w-8 h-8 border-2 border-[#ff2c55] border-t-transparent rounded-full animate-spin" />
-      </div>
+      <Loading/>
     );
   }
 
@@ -41,10 +41,10 @@ const Releases = () => {
               <span>Catalog Directory Terminal</span>
             </div>
             <h1 className="text-2xl sm:text-4xl font-black tracking-tight text-zinc-100">
-              Movies in Indore
+              Movies near you
             </h1>
             <p className="text-xs font-semibold text-zinc-500">
-              Discover active listings running across local structural multiplex centers.
+              Discover active shows running across local structural multiplex centers.
             </p>
           </div>
 
@@ -75,9 +75,7 @@ const Releases = () => {
 
         {/* CINEMATIC TICKETING PLATFORM GRID */}
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5 gap-x-5 gap-y-8">
-          {movies.map((movie) => {
-            const movieTitle = typeof movie === 'object' && movie !== null ? (movie.title || "Untitled Show") : "Untitled Show";
-            
+          {movies?.map((movie) => {            
             let displayGenre = 'Action';
             if (movie?.genres && Array.isArray(movie.genres) && movie.genres.length > 0) {
               const primaryGenre = movie.genres[0];
@@ -86,13 +84,13 @@ const Releases = () => {
 
             return (
               <div
-                key={movie?.id || movie?.movie_id || movieTitle}
+                key={movie?._id || movie.title}
                 className="group flex flex-col justify-between h-full bg-transparent"
               >
                 {/* POSTER ELEMENT CARD WITH APP WRAPPED ACTION LABELS */}
                 <div className="w-full aspect-[2/3] rounded-2xl overflow-hidden relative bg-zinc-950 border border-zinc-900 shadow-md group-hover:shadow-xl group-hover:border-zinc-800 transition-all duration-300">
                   <img
-                    src={movie?.poster_path}
+                    src={image_base_url+movie?.poster_path}
                     alt=""
                     className="w-full h-full object-cover transition-all duration-500 ease-out group-hover:scale-102 group-hover:brightness-95"
                     onError={(e) => { e.target.style.display = 'none'; }}
@@ -130,7 +128,7 @@ const Releases = () => {
                 {/* DENSITY CONTENT BLOCK CAP CONTAINER */}
                 <div className="mt-3.5 space-y-1.5 px-1">
                   <h3 className="font-black text-base text-zinc-200 group-hover:text-white transition-colors duration-300 truncate w-full tracking-tight">
-                    {movieTitle}
+                    {movie.title}
                   </h3>
                   
                   <div className="flex flex-wrap gap-1.5 items-center text-[10px] font-black uppercase tracking-wider text-zinc-500">
