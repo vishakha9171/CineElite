@@ -1,6 +1,7 @@
 import axios from "axios";
 import Movie from "../models/Movie.js"; 
 import Show from "../models/Show.js"; 
+import { inngest } from "../inngest/index.js";
 
 
 async function fetchWithRetry(url, options, retries = 3) {
@@ -128,6 +129,12 @@ export const addShow = async (req, res) => {
     if (showsToCreate.length > 0) {
       await Show.insertMany(showsToCreate);
     }
+
+    // Trigger Inngest event
+    await inngest.send({
+      name: "app/show.added",
+      data: { movieTitle: movie.title }
+    });
 
     console.log("Show created successfully in DB");
     res.json({ success: true, message: 'Show Added successfully.' });
