@@ -13,7 +13,7 @@ const userSchema = new mongoose.Schema({
 
 // mongoose.models.User: Looks into Mongoose's internal list of models to see if a model
 //  named User was already compiled during a previous execution.
-// const User = mongoose.models.User || mongoose.model('User', userSchema)
-const User = mongoose.model('User', userSchema)
+const User = mongoose.models.User || mongoose.model('User', userSchema)
+// const User = mongoose.model('User', userSchema)
 
 export default User;
