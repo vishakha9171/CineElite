@@ -4,7 +4,7 @@
 
 **A full-stack movie ticket booking platform built with the MERN stack.**
 
-Browse movies • Watch trailers • Book seats • Pay securely • Manage everything from an admin dashboard
+Browse movies • Watch trailers • Add to favorites • Select date and time slot • Book seats • Pay securely • check booking history • Manage shows,booking,users from an admin dashboard
 
 [![MongoDB](https://img.shields.io/badge/MongoDB-4EA94B?style=flat&logo=mongodb&logoColor=white)](https://www.mongodb.com/)
 [![Express.js](https://img.shields.io/badge/Express.js-000000?style=flat&logo=express&logoColor=white)](https://expressjs.com/)
@@ -29,7 +29,6 @@ Browse movies • Watch trailers • Book seats • Pay securely • Manage ever
 - [Getting Started](#-getting-started)
   - [Prerequisites](#prerequisites)
   - [Installation](#installation)
-  - [Environment Variables](#environment-variables)
 - [Usage Guide](#-usage-guide)
   - [User Flow](#user-flow)
   - [Admin Flow](#admin-flow)
